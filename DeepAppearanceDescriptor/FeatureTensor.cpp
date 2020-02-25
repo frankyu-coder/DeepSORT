@@ -7,6 +7,7 @@
 
 #include "FeatureTensor.h"
 #include <iostream>
+
 using namespace tensorflow;
 
 #define TENSORFLOW_MODEL_META "mars-small128.meta"
