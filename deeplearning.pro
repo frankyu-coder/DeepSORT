@@ -48,7 +48,8 @@ SOURCES += \
     KalmanFilter/tracker.cpp \
     MunkresAssignment/munkres/munkres.cpp \
     MunkresAssignment/hungarianoper.cpp \
-    main.cpp
+    CountingBees.cpp \
+    main.cpp \
 
 
 
@@ -63,6 +64,7 @@ HEADERS += \
     KalmanFilter/tracker.h \
     MunkresAssignment/munkres/matrix.h \
     MunkresAssignment/munkres/munkres.h \
-    MunkresAssignment/hungarianoper.h
+    MunkresAssignment/hungarianoper.h \
+    CountingBees.h \
 
 DEFINES += _GLIBCXX_USE_CXX11_ABI=0
