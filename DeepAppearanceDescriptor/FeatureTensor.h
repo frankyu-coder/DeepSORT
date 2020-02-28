@@ -1,5 +1,6 @@
 #include "opencv2/opencv.hpp"
 #include "opencv2/core/core.hpp"
+#include "opencv2/core/cuda.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "tensorflow/core/public/session.h"
 #include "tensorflow/core/protobuf/meta_graph.pb.h"
