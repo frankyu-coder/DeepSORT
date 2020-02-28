@@ -122,13 +122,16 @@ int main(int argc, char **argv)
   int cnInBees = 0, cnOutBees = 0;
 
   // Give the configuration and weight files for the model
-  cv::String modelConfiguration = "yolov3.cfg";
-  cv::String modelWeights = "yolov3.weights";
+  cv::String modelConfiguration = "deployssd.prototxt";//yolov3.cfg";
+  cv::String modelWeights = "mobilenet_iter_73000.caffemodel";//yolov3.weights";
 
   // Load the network
-  cv::dnn::Net net = cv::dnn::readNetFromDarknet(modelConfiguration, modelWeights);
-  net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
-  net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
+  cv::dnn::Net net = cv::dnn::readNetFromCaffe(modelConfiguration, modelWeights);
+  //cv::dnn::Net net = cv::dnn::readNetFromDarknet(modelConfiguration, modelWeights);
+  //net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
+  //net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
+  net.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
+  net.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
 
   // Open a video file or an image file or a camera stream.
   std::string str, outputFile;
