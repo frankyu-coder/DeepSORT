@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <unistd.h>
 #include <sys/time.h>
 
 #include <opencv2/opencv.hpp>
@@ -118,20 +119,22 @@ int main(int argc, char **argv)
     classes.push_back(line);
 
   // counter with the gate area of bee box
-  CountingBees counter(670, 190, 1665, 580);
+  CountingBees counter(190, 190, 1665, 1665);
   int cnInBees = 0, cnOutBees = 0;
 
   // Give the configuration and weight files for the model
-  cv::String modelConfiguration = "deployssd.prototxt";//yolov3.cfg";
-  cv::String modelWeights = "mobilenet_iter_73000.caffemodel";//yolov3.weights";
+  cv::String modelConfiguration = "deployssd.prototxt";
+  cv::String modelWeights = "mobilenet_iter_73000.caffemodel";
+  //cv::String modelConfiguration = "yolov3.cfg";
+  //cv::String modelWeights = "yolov3.weights";
 
   // Load the network
   cv::dnn::Net net = cv::dnn::readNetFromCaffe(modelConfiguration, modelWeights);
   //cv::dnn::Net net = cv::dnn::readNetFromDarknet(modelConfiguration, modelWeights);
-  //net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
-  //net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
-  net.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
-  net.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
+  net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
+  net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
+  //net.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
+  //net.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
 
   // Open a video file or an image file or a camera stream.
   std::string str, outputFile;
@@ -149,8 +152,8 @@ int main(int argc, char **argv)
       std::ifstream ifile(str);
       if (!ifile)
         throw("error");
-      //cap.open(str);
-      cap.open("http://192.168.31.85:8080/?action=stream?dummy=param.mjpg");
+      cap.open(str);
+      //cap.open("http://192.168.31.85:8080/?action=stream?dummy=param.mjpg");
       str.replace(str.end() - 4, str.end(), "_yolo_out_cpp.jpg");
       outputFile = str;
     }
@@ -288,11 +291,21 @@ int main(int argc, char **argv)
 
     imshow(kWinName, frame);
 
-    std::cout << "cnInBees  =  " << cnInBees << " , "
-              << "cnOutBees = " << cnOutBees << std::endl;
     std::cout << "nFrame = " << nFrame << std::endl;
     nFrame++;
+    usleep(1000);
+    //if (0 == (nFrame % 29)){
+	counter.Count(cnInBees,cnOutBees);
+	std::cout << "-------------------"
+	          << "cnInBees  =  " << cnInBees << " , "
+              << "cnOutBees = " << cnOutBees << std::endl;
+    //}
   }
+  
+  // Count the number of bees which are in&out of the bee box
+  counter.Count(cnInBees,cnOutBees);
+  std::cout << "cnInBees  =  " << cnInBees << " , "
+              << "cnOutBees = " << cnOutBees << std::endl;
 
   cap.release();
   if (!parser.has("image"))
