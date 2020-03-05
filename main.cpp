@@ -51,7 +51,7 @@ void drawPred(int classId, float conf, int left, int top, int right, int bottom,
 // Get the names of the output layers
 std::vector<cv::String> getOutputsNames(const cv::dnn::Net &net);
 
-void get_detections(DETECTBOX box, float confidence, DETECTIONS &d);
+void get_detections(DETECTBOX&  box, float confidence, DETECTIONS &d);
 
 static long gettimeU()
 {
@@ -334,77 +334,71 @@ int main(int argc, char **argv)
 // Remove the bounding boxes with low confidence using non-maxima suppression
 void postprocess(cv::Mat &frame, const cv::Mat &output, DETECTIONS &d)
 {
+  std::vector<int> classIds;
+  std::vector<float> confidences;
+  std::vector<cv::Rect> boxes;
 
-    std::vector<int> classIds;
-    std::vector<float> confidences;
-    std::vector<cv::Rect> boxes;
+  cv::Mat detectionMat(output.size[2], output.size[3], CV_32F, (cv::Scalar *)output.ptr<float>());
 
-    cv::Mat detectionMat(output.size[2], output.size[3], CV_32F, (cv::Scalar*)output.ptr<float>());
+  for (int i = 0; i < detectionMat.rows; i++)
+  {
 
+    float confidence = detectionMat.at<float>(i, 2);
 
-    for (int i = 0; i < detectionMat.rows; i++)
+    if (confidence > confThreshold)
     {
 
-        float confidence = detectionMat.at<float>(i, 2);
+      size_t objectClass = (size_t)(detectionMat.at<float>(i, 1));
 
-        if (confidence > confThreshold)
-        {
+      int xLeftBottom = static_cast<int>(detectionMat.at<float>(i, 3) * frame.cols);
+      int yLeftBottom = static_cast<int>(detectionMat.at<float>(i, 4) * frame.rows);
+      int xRightTop = static_cast<int>(detectionMat.at<float>(i, 5) * frame.cols);
+      int yRightTop = static_cast<int>(detectionMat.at<float>(i, 6) * frame.rows);
 
+      int width = xRightTop - xLeftBottom;
+      int height = yLeftBottom - yRightTop;
+      int left = xLeftBottom;
+      int top = yRightTop;
 
-            size_t objectClass = (size_t)(detectionMat.at<float>(i, 1));
+      cv::Rect object((int)xLeftBottom, (int)yLeftBottom, (int)(xRightTop - xLeftBottom), (int)(yRightTop - yLeftBottom));
 
-            int xLeftBottom = static_cast<int>(detectionMat.at<float>(i, 3) * frame.cols);
-            int yLeftBottom = static_cast<int>(detectionMat.at<float>(i, 4) * frame.rows);
-            int xRightTop = static_cast<int>(detectionMat.at<float>(i, 5) * frame.cols);
-            int yRightTop = static_cast<int>(detectionMat.at<float>(i, 6) * frame.rows);
+      cv::rectangle(frame, object, Scalar(0, 255, 0), 2);
 
-            int width=xRightTop-xLeftBottom;
-            int height=yLeftBottom-yRightTop;
-            int left=xLeftBottom;
-            int top=yRightTop;
+      // String label = String(classNames[objectClass]) + ": " + conf;
+      String label = cv::format("%.2f", confidence);
 
-            cv::Rect object((int)xLeftBottom, (int)yLeftBottom,(int)(xRightTop - xLeftBottom),(int)(yRightTop - yLeftBottom));
+      int baseLine = 0;
+      Size labelSize = getTextSize(label, FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
+      cv::Rect Matafterzh = cv::Rect(Point(xLeftBottom, yLeftBottom - labelSize.height), Size(labelSize.width, labelSize.height + baseLine));
+      if (Matafterzh.x < 0 || Matafterzh.y < 0 || Matafterzh.x > frame.cols || Matafterzh.y > frame.rows || (Matafterzh.x + Matafterzh.width) > frame.cols || (Matafterzh.y + Matafterzh.height) > frame.rows)
+        continue;
 
-            cv::rectangle(frame, object, Scalar(0, 255, 0), 2);
+      cv::rectangle(frame, Matafterzh, Scalar(0, 255, 0), cv::FILLED);
+      putText(frame, label, Point(xLeftBottom, yLeftBottom), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 0));
+      classIds.push_back(objectClass);
+      confidences.push_back(confidence);
 
-
-           // String label = String(classNames[objectClass]) + ": " + conf;
-             String label = cv::format("%.2f", confidence);
-
-            int baseLine = 0;
-            Size labelSize = getTextSize(label, FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
-           cv::Rect Matafterzh=cv::Rect(Point(xLeftBottom, yLeftBottom - labelSize.height),Size(labelSize.width, labelSize.height + baseLine));
-           if(Matafterzh.x<0 || Matafterzh.y<0 || Matafterzh.x>frame.cols || Matafterzh.y>frame.rows || (Matafterzh.x+Matafterzh.width)>frame.cols || (Matafterzh.y+Matafterzh.height)>frame.rows)
-                 continue;
-
-           cv::rectangle(frame, Matafterzh,Scalar(0, 255, 0),  cv::FILLED);
-            putText(frame, label, Point(xLeftBottom, yLeftBottom), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 0));
-            classIds.push_back(objectClass);
-            confidences.push_back(confidence);
-
-            boxes.push_back(Matafterzh);
-        }
-
+      boxes.push_back(Matafterzh);
     }
+  }
 
-   std::vector<int> indices;
-    std::cout<<"boxesize before nms:"<<boxes.size()<<std::endl;
-    cv::dnn::NMSBoxes(boxes, confidences, confThreshold, nmsThreshold, indices);
-    std::cout<<"boxesize after nms:"<<boxes.size()<<std::endl;
-    for (size_t i = 0; i < indices.size(); ++i)
-    {
-      size_t idx = static_cast<size_t>(indices[i]);
-      cv::Rect box = boxes[idx];
-      //目标检测 代码的可视化
-      //drawPred(classIds[idx], confidences[idx], box.x, box.y,box.x + box.width, box.y + box.height, frame);
-      get_detections(DETECTBOX(box.x, box.y, box.width, box.height), confidences[idx], d);
-    }
+  std::vector<int> indices;
+  std::cout << "boxesize before nms:" << boxes.size() << std::endl;
+  cv::dnn::NMSBoxes(boxes, confidences, confThreshold, nmsThreshold, indices);
+  std::cout << "boxesize after nms:" << boxes.size() << std::endl;
+  for (size_t i = 0; i < indices.size(); ++i)
+  {
+    size_t idx = static_cast<size_t>(indices[i]);
+    cv::Rect box = boxes[idx];
+    //目标检测 代码的可视化
+    //drawPred(classIds[idx], confidences[idx], box.x, box.y,box.x + box.width, box.y + box.height, frame);
+    get_detections(DETECTBOX(box.x, box.y, box.width, box.height), confidences[idx], d);
+  }
 
-     /* imwrite("image.jpg", frame);
+  /* imwrite("image.jpg", frame);
      std::cout<<"havewriteten"<<std::endl;
      waitKey(5000);
      return;*/
-
 }
 
 // Draw the predicted bounding box
@@ -449,7 +443,7 @@ std::vector<cv::String> getOutputsNames(const cv::dnn::Net &net)
   return names;
 }
 
-void get_detections(DETECTBOX box, float confidence, DETECTIONS &d)
+void get_detections(DETECTBOX&  box, float confidence, DETECTIONS& d)
 {
   DETECTION_ROW tmpRow;
   tmpRow.tlwh = box; //DETECTBOX(x, y, w, h);
