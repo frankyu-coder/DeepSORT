@@ -6,6 +6,7 @@
 #include <sstream>
 #include <iostream>
 #include <unistd.h>
+
 #include <sys/time.h>
 
 #include <opencv2/opencv.hpp>
@@ -32,9 +33,9 @@ const char *keys =
 // yolo parameter
 // Initialize the parameters
 const float confThreshold = 0.5; // Confidence threshold
-const float nmsThreshold = 0.4;  // Non-maximum suppression threshold
-const int inpWidth = 416;        // Width of network's input image
-const int inpHeight = 416;       // Height of network's input image
+const float nmsThreshold = 0.4;   // Non-maximum suppression threshold
+const int inpWidth = 416;         // Width of network's input image
+const int inpHeight = 416;        // Height of network's input image
 std::vector<std::string> classes;
 
 //Deep SORT parameter
@@ -42,8 +43,8 @@ std::vector<std::string> classes;
 const int nn_budget = 100;
 const float max_cosine_distance = 0.2;
 // Remove the bounding boxes with low confidence using non-maxima suppression
-void postprocess(cv::Mat &frame, const std::vector<cv::Mat> &out, DETECTIONS &d);
-
+//void postprocess(cv::Mat &frame, const std::vector<cv::Mat> &out, DETECTIONS &d);
+void postprocess(cv::Mat &frame, const cv::Mat &output, DETECTIONS &d);
 // Draw the predicted bounding box
 void drawPred(int classId, float conf, int left, int top, int right, int bottom, cv::Mat &frame);
 
@@ -69,12 +70,14 @@ static void timeusePrint(const std::string &mod, const long time_start, const lo
   std::cout << mod << " cost " << (time_end - time_start) / 1000 << " ms .." << std::endl;
 }
 
-static std::string itos(int i) // convert int to string
-{
-  std::stringstream s;
-  s << i;
-  return s.str();
-}
+//static std::string itos(int i) // convert int to string
+//{
+//  std::stringstream s;
+//  s << i;
+//  return s.str();
+//}
+
+using namespace cv;
 
 int main(int argc, char **argv)
 {
@@ -123,16 +126,26 @@ int main(int argc, char **argv)
   int cnInBees = 0, cnOutBees = 0;
 
   // Give the configuration and weight files for the model
-  cv::String modelConfiguration = "deployssd.prototxt";
-  cv::String modelWeights = "mobilenet_iter_73000.caffemodel";
+
   //cv::String modelConfiguration = "yolov3.cfg";
   //cv::String modelWeights = "yolov3.weights";
 
+  //cv::String modelConfiguration = "deployssd.prototxt";
+  //cv::String modelWeights = "mobilenet_iter_73000.caffemodel";
+
+
+  cv::String modelConfiguration = "/home/frankyu/github/DeepSORT/model1/frozen_inference_graph.pb";
+  cv::String modelWeights = "/home/frankyu/github/DeepSORT/model1/bee.pbtxt";
+
+
   // Load the network
-  cv::dnn::Net net = cv::dnn::readNetFromCaffe(modelConfiguration, modelWeights);
   //cv::dnn::Net net = cv::dnn::readNetFromDarknet(modelConfiguration, modelWeights);
+  //cv::dnn::Net net = cv::dnn::readNetFromCaffe(modelConfiguration, modelWeights);
+  cv::dnn::Net net = cv::dnn::readNetFromTensorflow(modelConfiguration, modelWeights);
+  
   net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
   net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
+
   //net.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
   //net.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
 
@@ -217,21 +230,30 @@ int main(int argc, char **argv)
       break;
     }
     // Create a 4D blob from a frame.
-    cv::dnn::blobFromImage(frame, blob, 1 / 255.0, cvSize(inpWidth, inpHeight), cv::Scalar(0, 0, 0), true, false);
+    //cv::dnn::blobFromImage(frame, blob, 1 / 255.0, cvSize(inpWidth, inpHeight), cv::Scalar(0, 0, 0), true, false);
+    blob=cv::dnn::blobFromImage(frame, 1.0, cv::Size(300, 300), cv::Scalar(), true, false);
 
     //Sets the input to the network
     net.setInput(blob);
 
     // Runs the forward pass to get output of the output layers
-    std::vector<cv::Mat> outs;
-    net.forward(outs, getOutputsNames(net));
+    //std::vector<cv::Mat> outs;
+    cv::Mat outs;
+    //net.forward(outs, getOutputsNames(net));
+    outs = net.forward();
 
     // Remove the bounding boxes with low confidence
     DETECTIONS detections;
     postprocess(frame, outs, detections);
 
     std::cout << "Detections size:" << detections.size() << std::endl;
-    if (FeatureTensor::getInstance()->getRectsFeature(frame, detections))
+    if (!FeatureTensor::getInstance()->getRectsFeature(frame, detections))
+    {
+      std::cout << "Tensorflow get feature failed!" << std::endl;
+      usleep(1000);
+      continue;
+    }
+
     {
       std::cout << "Tensorflow get feature succeed!" << std::endl;
       mytracker.predict();
@@ -265,11 +287,6 @@ int main(int argc, char **argv)
         }
       }
     }
-    else
-    {
-      std::cout << "Tensorflow get feature failed!" << std::endl;
-      ;
-    }
 
     // Put efficiency information. The function getPerfProfile returns the overall time for inference(t) and the timings for each of the layers(in layersTimes)
     std::vector<double> layersTimes;
@@ -294,12 +311,12 @@ int main(int argc, char **argv)
     std::cout << "nFrame = " << nFrame << std::endl;
     nFrame++;
     usleep(1000);
-    //if (0 == (nFrame % 29)){
+    if (0 == (nFrame % 30)){
 	counter.Count(cnInBees,cnOutBees);
 	std::cout << "-------------------"
 	          << "cnInBees  =  " << cnInBees << " , "
               << "cnOutBees = " << cnOutBees << std::endl;
-    //}
+    }
   }
   
   // Count the number of bees which are in&out of the bee box
@@ -315,54 +332,79 @@ int main(int argc, char **argv)
 }
 
 // Remove the bounding boxes with low confidence using non-maxima suppression
-void postprocess(cv::Mat &frame, const std::vector<cv::Mat> &outs, DETECTIONS &d)
+void postprocess(cv::Mat &frame, const cv::Mat &output, DETECTIONS &d)
 {
-  std::vector<int> classIds;
-  std::vector<float> confidences;
-  std::vector<cv::Rect> boxes;
 
-  for (size_t i = 0; i < outs.size(); ++i)
-  {
-    // Scan through all the bounding boxes output from the network and keep only the
-    // ones with high confidence scores. Assign the box's class label as the class
-    // with the highest score for the box.
-    float *data = (float *)outs[i].data;
-    for (int j = 0; j < outs[i].rows; ++j, data += outs[i].cols)
+    std::vector<int> classIds;
+    std::vector<float> confidences;
+    std::vector<cv::Rect> boxes;
+
+    cv::Mat detectionMat(output.size[2], output.size[3], CV_32F, (cv::Scalar*)output.ptr<float>());
+
+
+    for (int i = 0; i < detectionMat.rows; i++)
     {
-      cv::Mat scores = outs[i].row(j).colRange(5, outs[i].cols);
-      cv::Point classIdPoint;
-      double confidence;
-      // Get the value and location of the maximum score
-      cv::minMaxLoc(scores, 0, &confidence, 0, &classIdPoint);
-      if (static_cast<float>(confidence) > (confThreshold))
-      {
-        int centerX = (int)(data[0] * frame.cols);
-        int centerY = (int)(data[1] * frame.rows);
-        int width = (int)(data[2] * frame.cols);
-        int height = (int)(data[3] * frame.rows);
-        int left = centerX - width / 2;
-        int top = centerY - height / 2;
 
-        classIds.push_back(classIdPoint.x);
-        confidences.push_back((float)confidence);
-        boxes.push_back(cv::Rect(left, top, width, height));
-      }
+        float confidence = detectionMat.at<float>(i, 2);
+
+        if (confidence > confThreshold)
+        {
+
+
+            size_t objectClass = (size_t)(detectionMat.at<float>(i, 1));
+
+            int xLeftBottom = static_cast<int>(detectionMat.at<float>(i, 3) * frame.cols);
+            int yLeftBottom = static_cast<int>(detectionMat.at<float>(i, 4) * frame.rows);
+            int xRightTop = static_cast<int>(detectionMat.at<float>(i, 5) * frame.cols);
+            int yRightTop = static_cast<int>(detectionMat.at<float>(i, 6) * frame.rows);
+
+            int width=xRightTop-xLeftBottom;
+            int height=yLeftBottom-yRightTop;
+            int left=xLeftBottom;
+            int top=yRightTop;
+
+            cv::Rect object((int)xLeftBottom, (int)yLeftBottom,(int)(xRightTop - xLeftBottom),(int)(yRightTop - yLeftBottom));
+
+            cv::rectangle(frame, object, Scalar(0, 255, 0), 2);
+
+
+           // String label = String(classNames[objectClass]) + ": " + conf;
+             String label = cv::format("%.2f", confidence);
+
+            int baseLine = 0;
+            Size labelSize = getTextSize(label, FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
+           cv::Rect Matafterzh=cv::Rect(Point(xLeftBottom, yLeftBottom - labelSize.height),Size(labelSize.width, labelSize.height + baseLine));
+           if(Matafterzh.x<0 || Matafterzh.y<0 || Matafterzh.x>frame.cols || Matafterzh.y>frame.rows || (Matafterzh.x+Matafterzh.width)>frame.cols || (Matafterzh.y+Matafterzh.height)>frame.rows)
+                 continue;
+
+           cv::rectangle(frame, Matafterzh,Scalar(0, 255, 0),  cv::FILLED);
+            putText(frame, label, Point(xLeftBottom, yLeftBottom), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 0));
+            classIds.push_back(objectClass);
+            confidences.push_back(confidence);
+
+            boxes.push_back(Matafterzh);
+        }
+
     }
-  }
 
-  // Perform non maximum suppression to eliminate redundant overlapping boxes with
-  // lower confidences
-  std::vector<int> indices;
-  cv::dnn::NMSBoxes(boxes, confidences, confThreshold, nmsThreshold, indices);
-  for (size_t i = 0; i < indices.size(); ++i)
-  {
-    size_t idx = static_cast<size_t>(indices[i]);
-    cv::Rect box = boxes[idx];
-    //目标检测 代码的可视化
-    //drawPred(classIds[idx], confidences[idx], box.x, box.y,box.x + box.width, box.y + box.height, frame);
+   std::vector<int> indices;
+    std::cout<<"boxesize before nms:"<<boxes.size()<<std::endl;
+    cv::dnn::NMSBoxes(boxes, confidences, confThreshold, nmsThreshold, indices);
+    std::cout<<"boxesize after nms:"<<boxes.size()<<std::endl;
+    for (size_t i = 0; i < indices.size(); ++i)
+    {
+      size_t idx = static_cast<size_t>(indices[i]);
+      cv::Rect box = boxes[idx];
+      //目标检测 代码的可视化
+      //drawPred(classIds[idx], confidences[idx], box.x, box.y,box.x + box.width, box.y + box.height, frame);
+      get_detections(DETECTBOX(box.x, box.y, box.width, box.height), confidences[idx], d);
+    }
 
-    get_detections(DETECTBOX(box.x, box.y, box.width, box.height), confidences[idx], d);
-  }
+     /* imwrite("image.jpg", frame);
+     std::cout<<"havewriteten"<<std::endl;
+     waitKey(5000);
+     return;*/
+
 }
 
 // Draw the predicted bounding box
