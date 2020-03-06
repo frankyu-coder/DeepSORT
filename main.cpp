@@ -51,7 +51,7 @@ void drawPred(int classId, float conf, int left, int top, int right, int bottom,
 // Get the names of the output layers
 std::vector<cv::String> getOutputsNames(const cv::dnn::Net &net);
 
-void get_detections(DETECTBOX&  box, float confidence, DETECTIONS &d);
+void get_detections(DETECTBOX box, float confidence, DETECTIONS &d);
 
 static long gettimeU()
 {
@@ -165,8 +165,8 @@ int main(int argc, char **argv)
       std::ifstream ifile(str);
       if (!ifile)
         throw("error");
-      cap.open(str);
-      //cap.open("http://192.168.31.85:8080/?action=stream?dummy=param.mjpg");
+      //cap.open(str);
+      cap.open("http://192.168.31.85:8080/?action=stream?dummy=param.mjpg");
       str.replace(str.end() - 4, str.end(), "_yolo_out_cpp.jpg");
       outputFile = str;
     }
@@ -311,12 +311,12 @@ int main(int argc, char **argv)
     std::cout << "nFrame = " << nFrame << std::endl;
     nFrame++;
     usleep(1000);
-    if (0 == (nFrame % 30)){
+    //if (0 == (nFrame % 30)){
 	counter.Count(cnInBees,cnOutBees);
 	std::cout << "-------------------"
 	          << "cnInBees  =  " << cnInBees << " , "
               << "cnOutBees = " << cnOutBees << std::endl;
-    }
+    //}
   }
   
   // Count the number of bees which are in&out of the bee box
@@ -443,7 +443,7 @@ std::vector<cv::String> getOutputsNames(const cv::dnn::Net &net)
   return names;
 }
 
-void get_detections(DETECTBOX&  box, float confidence, DETECTIONS& d)
+void get_detections(DETECTBOX box, float confidence, DETECTIONS& d)
 {
   DETECTION_ROW tmpRow;
   tmpRow.tlwh = box; //DETECTBOX(x, y, w, h);
