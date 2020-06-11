@@ -15,9 +15,9 @@ INCLUDEPATH += /usr/local/include \
 	/home/frankyu/github/tensorflow/tensorflow/contrib/makefile/downloads/eigen  \
 	/home/frankyu/github/tensorflow/tensorflow/contrib/makefile/downloads/absl \
 	/home/frankyu/github/tensorflow/bazel-out/local_linux-py3-opt/genfiles  \
-	/home/frankyu/deep-learning-setups/opencv-4.0.1/include \
+	/home/frankyu/opencv/include \
 	/usr/local/include/eigen3 \
-	/home/frankyu/deep-learning-setups/opencv_contrib-4.0.1/modules/bgsegm/include \
+	/home/frankyu/opencv/opencv_contrib/modules/bgsegm/include \
 
 LIBS += /usr/local/opencv4/lib/libopencv_calib3d.so \
         /usr/local/opencv4/lib/libopencv_core.so    \
