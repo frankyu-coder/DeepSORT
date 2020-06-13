@@ -336,7 +336,7 @@ int main(int argc, char **argv)
     //if (0 == (nFrame % 30)){
 	counter.Count(cnInBees,cnOutBees);
 
-  // todo // 更新蜜蜂出入数到缓存（sqlite）
+    // todo // 更新蜜蜂出入数到缓存（sqlite）
 
 	std::cout << "-------------------"
 	          << "cnInBees  =  " << cnInBees << " , "
