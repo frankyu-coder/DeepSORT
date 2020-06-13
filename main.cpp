@@ -25,6 +25,27 @@
 #include "KalmanFilter/tracker.h"
 #include "CountingBees.h"
 
+//class BeeMessage
+//{
+//public:
+//  int  beesin;
+//  int  beesout;
+//  int  beesregion;
+//  char macaddr[48];
+//};
+
+//static const char *g_bee_count_buffer_name = "bee_count_buffer";
+//static std::map<char*, int> fillShmSizeMap()
+//{
+//  std::map<char *, int> shm_size_map;
+
+//  shm_size_map.insert(std::pair<char *, int>((char *)g_bee_count_buffer_name, sizeof(BeeMessage) * 10));
+
+//  return shm_size_map;
+//}
+
+//static std::map<char *, int> g_shm_size_map = fillShmSizeMap();
+
 const char *keys =
     "{help h usage ? | | Usage examples: \n\t\t./object_detection_yolo.out --image=dog.jpg \n\t\t./object_detection_yolo.out --video=run_sm.mp4}"
     "{image i        |<none>| input image   }"
@@ -208,6 +229,7 @@ int main(int argc, char **argv)
   // The index of video frame
   int nFrame = 0;
 
+  // todo // 初始化共享内存
   //cap.open("http://169.254.92.99:8080/?action=stream?dummy=param.mjpg");
 
   long time_start = 0;
@@ -313,6 +335,9 @@ int main(int argc, char **argv)
     usleep(1000);
     //if (0 == (nFrame % 30)){
 	counter.Count(cnInBees,cnOutBees);
+
+    // todo // 更新蜜蜂出入数到缓存（sqlite）
+
 	std::cout << "-------------------"
 	          << "cnInBees  =  " << cnInBees << " , "
               << "cnOutBees = " << cnOutBees << std::endl;
