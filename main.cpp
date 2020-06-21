@@ -27,9 +27,10 @@
 using namespace  std;
 using namespace  cv;
 const char *keys =
-    "{help h usage ? | | Usage examples: \n\t\t./object_detection_yolo.out --image=dog.jpg \n\t\t./object_detection_yolo.out --video=run_sm.mp4}"
+    "{help h usage ? | | Usage examples: \n\t\t./object_detection_yolo.out --image=dog.jpg \n\t\t./object_detection_yolo.out --video=run_sm.mp4 --stream=192.168.31.83}"
     "{image i        |<none>| input image   }"
-    "{video v       |<none>| input video   }";
+    "{video v       |<none>| input video   }"
+    "{stream s       |<none>| input stream   }";
 
 // Initialize the parameters
 const float confThreshold = 0.1; // Confidence threshold
