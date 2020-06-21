@@ -6,18 +6,18 @@ CONFIG -= qt
 INCLUDEPATH += /usr/local/include \
 	/usr/local/opencv4/include/opencv4 \
 	/usr/local/opencv4/include/opencv4/opencv2 \
-        /home/frankyu/github/tensorflow \
-	/home/frankyu/github/tensorflow/bazel-genfiles \
-	/home/frankyu/github/tensorflow/tensorflow/contrib/makefile/gen/protobuf/include \
-	/home/frankyu/github/tensorflow/tensorflow/contrib/makefile/gen/host_obj \
-	/home/frankyu/github/tensorflow/tensorflow/contrib/makefile/gen/proto \
-	/home/frankyu/github/tensorflow/tensorflow/contrib/makefile/downloads/nsync/public  \
-	/home/frankyu/github/tensorflow/tensorflow/contrib/makefile/downloads/eigen  \
-	/home/frankyu/github/tensorflow/tensorflow/contrib/makefile/downloads/absl \
-	/home/frankyu/github/tensorflow/bazel-out/local_linux-py3-opt/genfiles  \
-	/home/frankyu/opencv/include \
+        ../tensorflow \
+	../tensorflow/bazel-genfiles \
+	../tensorflow/tensorflow/contrib/makefile/gen/protobuf/include \
+	../tensorflow/tensorflow/contrib/makefile/gen/host_obj \
+	../tensorflow/tensorflow/contrib/makefile/gen/proto \
+	../tensorflow/tensorflow/contrib/makefile/downloads/nsync/public  \
+	../tensorflow/tensorflow/contrib/makefile/downloads/eigen  \
+	../tensorflow/tensorflow/contrib/makefile/downloads/absl \
+	../tensorflow/bazel-out/local_linux-py3-opt/genfiles  \
+	../../opencv/include \
 	/usr/local/include/eigen3 \
-	/home/frankyu/opencv/opencv_contrib/modules/bgsegm/include \
+	../../opencv/opencv_contrib/modules/bgsegm/include \
 
 LIBS += /usr/local/opencv4/lib/libopencv_calib3d.so \
         /usr/local/opencv4/lib/libopencv_core.so    \
@@ -33,8 +33,8 @@ LIBS += /usr/local/opencv4/lib/libopencv_calib3d.so \
         /usr/local/opencv4/lib/libopencv_videoio.so \
         /usr/local/opencv4/lib/libopencv_video.so\
         /usr/local/opencv4/lib/libopencv_ml.so \
-    	/home/frankyu/github/tensorflow/bazel-bin/tensorflow/libtensorflow_cc.so \
-    	/home/frankyu/github/tensorflow/bazel-bin/tensorflow/libtensorflow_framework.so \
+    	../tensorflow/bazel-bin/tensorflow/libtensorflow_cc.so \
+    	../tensorflow/bazel-bin/tensorflow/libtensorflow_framework.so \
 
 
 
