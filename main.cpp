@@ -94,7 +94,10 @@ int main(int argc, char **argv)
 	std::string str, outputFile;
 	cv::VideoCapture cap;
 	
-	paraParser(parser, str, outputFile, cap);
+	if (-1 == paraParser(parser, str, outputFile, cap))
+	{
+	    return -1;
+	}
 
 	//cv::VideoWriter video;
 	cv::Mat frame, blob;
@@ -324,6 +327,14 @@ int paraParser(cv::CommandLineParser& parser, std::string& str, std::string& out
 			// cap.open("http://169.254.92.99:8080/?action=stream?dummy=param.mjpg");
 			str.replace(str.end() - 4, str.end(), "_yolo_out_cpp.avi");
 			outputFile = str;
+		}
+		else if (parser.has("stream"))
+		{
+			str = parser.get<cv::String>("stream");
+			string getstreamurl = string("http://") + str + string(":8080") + string("/?action=stream?dummy=param.mjpg");
+
+			std::cout << "getstreamurl = " << getstreamurl << std::endl;
+			cap.open(getstreamurl);
 		}
 		else
 		{
