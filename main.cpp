@@ -2,7 +2,7 @@
 
 // Usage example:  ./object_detection_yolo.out --video=run.mp4
 //                 ./object_detection_yolo.out --image=bird.jpg
-#include "fstream"
+#include <fstream>
 #include <sstream>
 #include <iostream>
 #include <unistd.h>
@@ -36,7 +36,7 @@ const char *keys =
 const float confThreshold = 0.1; // Confidence threshold
 const float nmsThreshold = 0.6;  // Non-maximum suppression threshold
 cv::String detectionresult="";
-cv::String  traceresult="";
+cv::String traceresult="";
 int jg=10;
 cv::String regioncount="";
 std::vector<std::string> classes;
@@ -66,11 +66,11 @@ static std::string itos(int i); // convert int to string
 static void timeusePrint(const std::string &mod, const long time_start, const long time_end);
 static int cudaDeviceEnabled();
 static void dnnConfig(cv::dnn::Net& Net);
-static int paraParser(cv::CommandLineParser& parser, std::string& str, std::string& outputFile, cv::VideoCapture& cap);
+static int paraParser(cv::CommandLineParser& parser, std::string& str, std::string& outputFile, std::string& total_result_file, cv::VideoCapture& cap);
 static int frameProcess(tracker& mytracker, CountingBees& counter, int& cnInBees, int& cnOutBees, cv::dnn::Net& net, 
 cv::CommandLineParser& parser, std::string& outputFile, cv::VideoCapture& cap, cv::Mat& frame, cv::Mat& blob);
 
-
+std::string g_total_result_file;
 
 int main(int argc, char **argv)
 {
@@ -95,7 +95,7 @@ int main(int argc, char **argv)
 	std::string str, outputFile;
 	cv::VideoCapture cap;
 	
-	if (-1 == paraParser(parser, str, outputFile, cap))
+	if (-1 == paraParser(parser, str, outputFile, g_total_result_file, cap))
 	{
 	    return -1;
 	}
@@ -300,7 +300,7 @@ void dnnConfig(cv::dnn::Net& net)
 	//net.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
 }
 
-int paraParser(cv::CommandLineParser& parser, std::string& str, std::string& outputFile, cv::VideoCapture& cap)
+int paraParser(cv::CommandLineParser& parser, std::string& str, std::string& outputFile, std::string& total_result_file, cv::VideoCapture& cap)
 {
 	try
 	{
@@ -316,6 +316,7 @@ int paraParser(cv::CommandLineParser& parser, std::string& str, std::string& out
 			//cap.open("http://169.254.92.99:8080/?action=stream?dummy=param.mjpg");
 			str.replace(str.end() - 4, str.end(), "_yolo_out_cpp.jpg");
 			outputFile = str;
+			total_result_file = "image.total.result";
 		}
 		else if (parser.has("video"))
 		{
@@ -328,6 +329,7 @@ int paraParser(cv::CommandLineParser& parser, std::string& str, std::string& out
 			// cap.open("http://169.254.92.99:8080/?action=stream?dummy=param.mjpg");
 			str.replace(str.end() - 4, str.end(), "_yolo_out_cpp.avi");
 			outputFile = str;
+			total_result_file = "video.total.result";
 		}
 		else if (parser.has("stream"))
 		{
@@ -336,10 +338,12 @@ int paraParser(cv::CommandLineParser& parser, std::string& str, std::string& out
 
 			std::cout << "getstreamurl = " << getstreamurl << std::endl;
 			cap.open(getstreamurl);
+			total_result_file = "stream.total.result";
 		}
 		else
 		{
 			cap.open(0);
+			total_result_file = "error.total.result";
 		}
 
 	}
@@ -364,7 +368,20 @@ cv::CommandLineParser& parser, std::string& outputFile, cv::VideoCapture& cap, c
 		if (frame.empty())
 		{
 			std::cout << "Done processing !!!" << std::endl;
-			//std::cout << "Output file is stored as " << outputFile << std::endl;
+
+			time_t now;
+			struct tm *fmt; 
+
+			time(&now);  
+			fmt = localtime(&now);
+
+			ofstream file(g_total_result_file, ios::app);
+			std::string content;
+			content = std::to_string(fmt->tm_year+1900) + "/" + std::to_string(fmt->tm_mon+1) + "/" + std::to_string(fmt->tm_mday) 
+				+ "-" + std::to_string(fmt->tm_hour) + ":" + std::to_string(fmt->tm_min) + ":" + std::to_string(fmt->tm_sec) 
+				+ " " + "cnInBees = " + std::to_string(cnInBees) + ", cnOutBees = " + std::to_string(cnOutBees);
+			file << content << std::endl;
+			std::cout << "Total result  is stored as " << g_total_result_file << std::endl;
 			cv::waitKey(3000);
 			break;
 		}
