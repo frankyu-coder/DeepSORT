@@ -38,7 +38,7 @@ const float nmsThreshold = 0.6;  // Non-maximum suppression threshold
 cv::String detectionresult="";
 cv::String traceresult="";
 int jg=10;
-cv::String regioncount="";
+//cv::String regioncount="";
 std::vector<std::string> classes;
 int tempregion=0;
 // The index of video frame
@@ -166,13 +166,13 @@ void postprocess(cv::Mat &frame, const cv::Mat &output, DETECTIONS &d,int zh)
 			classIds.push_back(objectClass);
 			confidences.push_back(confidence);
 			boxes.push_back(Matafterzh);
-			cv::String temp=cv::format("%.5d %f %d %d %d %d;\r\n",zh, confidence, (int)xLeftBottom, (int)yLeftBottom,(int)(xRightTop - xLeftBottom),(int)(yRightTop - yLeftBottom));
-			detectionresult=detectionresult+temp;
+			//cv::String temp=cv::format("%.5d %f %d %d %d %d;\r\n",zh, confidence, (int)xLeftBottom, (int)yLeftBottom,(int)(xRightTop - xLeftBottom),(int)(yRightTop - yLeftBottom));
+			//detectionresult=detectionresult+temp;
 			tempregion=tempregion+1;
 		}
 	}
-	cv::String temp1=cv::format("%.5d %d;\r\n",zh,tempregion);
-	regioncount=regioncount+temp1;
+	//cv::String temp1=cv::format("%.5d %d;\r\n",zh,tempregion);
+	//regioncount=regioncount+temp1;
 	std::vector<int> indices;
 	std::cout<<"boxesize before nms:"<<boxes.size()<<std::endl;
 	cv::dnn::NMSBoxes(boxes, confidences, confThreshold, nmsThreshold, indices);
@@ -425,18 +425,18 @@ cv::CommandLineParser& parser, std::string& outputFile, cv::VideoCapture& cap, c
 				rectangle(frame, rect, cv::Scalar(0, 0, 255), 2);
 				std::string label = cv::format("%d", result[k].first);
 				//cv::putText(frame, label, cv::Point(rect.x, rect.y), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(0, 0, 255), 2);
-				cv::String cvstr=cv::format("%.5d %d %d %d %d %d;\r\n", nFrame,result[k].first,(int)tmp(0), (int)tmp(1), (int)tmp(2), (int)tmp(3));
-				traceresult=traceresult+cvstr;
+				//cv::String cvstr=cv::format("%.5d %d %d %d %d %d;\r\n", nFrame,result[k].first,(int)tmp(0), (int)tmp(1), (int)tmp(2), (int)tmp(3));
+				//traceresult=traceresult+cvstr;
 			}
 
 			if(int(nFrame/jg)>int((nFrame-1)/jg))
 			{
 				//std::cout<<"detectionresult:"<<detectionresult;
 				//std::cout<<"traceresult:"<<traceresult;
-				std::cout<<"regioncount:"<<regioncount;
-				detectionresult="";
-				traceresult="";
-				regioncount="";
+				//std::cout<<"regioncount:"<<regioncount;
+				//detectionresult="";
+				//traceresult="";
+				//regioncount="";
 			}
 			
 			//cv::waitKey(500);
@@ -477,7 +477,7 @@ cv::CommandLineParser& parser, std::string& outputFile, cv::VideoCapture& cap, c
 		//if (0 == nFrame % 30)
 		{
 		counter.Count(cnInBees,cnOutBees);
-		nFrame = 0;
+		//nFrame = 0;
 		std::cout << "--------------cnInBees  =  " << cnInBees << " , "
 			  << "--------------cnOutBees = " << cnOutBees << " , " 
 			  << "--------------tempRegion = " << tempregion <<  std::endl;
