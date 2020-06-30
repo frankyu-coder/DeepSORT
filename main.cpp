@@ -114,7 +114,7 @@ int main(int argc, char **argv)
 	//static const std::string kWinName = "Multiple Object Tracking";
 
 	// counter with the gate area of bee box
-	CountingBees counter(1, 670, 190, 1665, 580, BEEBOX_GATE_270);
+	CountingBees counter(60*60*24, 670, 190, 1665, 580, BEEBOX_GATE_270);
 	int cnInBees = 0;
     int  cnOutBees = 0;
 
@@ -316,7 +316,7 @@ int paraParser(cv::CommandLineParser& parser, std::string& str, std::string& out
 			//cap.open("http://169.254.92.99:8080/?action=stream?dummy=param.mjpg");
 			str.replace(str.end() - 4, str.end(), "_yolo_out_cpp.jpg");
 			outputFile = str;
-			total_result_file = "image.total.result";
+			total_result_file = str + "image.total.result";
 		}
 		else if (parser.has("video"))
 		{
@@ -329,7 +329,7 @@ int paraParser(cv::CommandLineParser& parser, std::string& str, std::string& out
 			// cap.open("http://169.254.92.99:8080/?action=stream?dummy=param.mjpg");
 			str.replace(str.end() - 4, str.end(), "_yolo_out_cpp.avi");
 			outputFile = str;
-			total_result_file = "video.total.result";
+			total_result_file = str + "video.total.result";
 		}
 		else if (parser.has("stream"))
 		{
@@ -338,7 +338,7 @@ int paraParser(cv::CommandLineParser& parser, std::string& str, std::string& out
 
 			std::cout << "getstreamurl = " << getstreamurl << std::endl;
 			cap.open(getstreamurl);
-			total_result_file = "stream.total.result";
+			total_result_file = str + "stream.total.result";
 		}
 		else
 		{
@@ -474,7 +474,7 @@ cv::CommandLineParser& parser, std::string& outputFile, cv::VideoCapture& cap, c
 		time_end = gettimeU();
 		timeusePrint("total", time_start, time_end);
 		
-		if (0 == nFrame % 30)
+		//if (0 == nFrame % 30)
 		{
 		counter.Count(cnInBees,cnOutBees);
 		nFrame = 0;
