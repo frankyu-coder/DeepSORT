@@ -73,8 +73,10 @@ cv::CommandLineParser& parser, std::string& outputFile, cv::VideoCapture& cap, c
 
 std::string g_total_result_file;
 
-	int cnInBees_total = 0;
-    int  cnOutBees_total = 0;
+int cnInBees_total = 0;
+int cnOutBees_total = 0;
+int cnInBees_bak = 0;
+int cnOutBees_bak = 0;
 
 int main(int argc, char **argv)
 {
@@ -120,7 +122,7 @@ int main(int argc, char **argv)
 	// counter with the gate area of bee box
 	CountingBees counter(60*60*24, 670, 190, 1665, 580, BEEBOX_GATE_270);
 	int cnInBees = 0;
-    int  cnOutBees = 0;
+	int  cnOutBees = 0;
 
 	// Process frames
 	frameProcess(mytracker, counter,  cnInBees, cnOutBees, net, parser, outputFile, cap, frame, blob);
@@ -387,7 +389,7 @@ cv::CommandLineParser& parser, std::string& outputFile, cv::VideoCapture& cap, c
 				+ "/" + std::to_string(fmt->tm_mday) 
 				+ "-" + std::to_string(fmt->tm_hour) 
 				+ ":" + std::to_string(fmt->tm_min) + ":" + std::to_string(fmt->tm_sec) 
-				+ " " + "cnInBees = " + std::to_string(cnInBees_total) + ", cnOutBees = " + std::to_string(cnOutBees_total);
+				+ " " + "cnInBees = " + std::to_string(cnInBees_bak) + ", cnOutBees = " + std::to_string(cnOutBees_bak);
 			file << content << std::endl;
 			std::cout << "Total result  is stored as " << g_total_result_file << std::endl;
 			cv::waitKey(3000);
@@ -487,8 +489,10 @@ cv::CommandLineParser& parser, std::string& outputFile, cv::VideoCapture& cap, c
 		if (time_pass > (60 *1000))// == nFrame % 30)
 		{
 		counter.Count(cnInBees,cnOutBees);
-cnInBees_total += cnInBees;
-cnOutBees_total += cnOutBees;
+		cnInBees_bak = cnInBees;
+		cnOutBees_bak = cnOutBees;
+		cnInBees_total += cnInBees;
+		cnOutBees_total += cnOutBees;
 		//nFrame = 0;
 		time_start_init = gettimeU();
 		std::cout << "--------------cnInBees  =  " << cnInBees << " , " << "--------------cnOutBees = " << cnOutBees << " , "  << "--------------tempRegion = " << tempregion <<  std::endl;
