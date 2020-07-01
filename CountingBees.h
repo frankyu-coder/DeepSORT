@@ -69,7 +69,7 @@ public:
     bool Count(int& cnInBees, int& cnOutBees);
         
 public:
-    void Update(int nFrame, int idTrack, float x, float y, float width, float height);
+    void Update(int& beesInTotal, int& beesOutTotal, int& nFrame, int idTrack, float x, float y, float width, float height);
 
 protected:
     float GetTrackAngle(const TRACK_POINT& ptStart, const TRACK_POINT& ptEnd);

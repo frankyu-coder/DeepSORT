@@ -44,8 +44,9 @@ int tempregion=0;
 // The index of video frame
 int nFrame = 0;
 //cap.open("http://169.254.92.99:8080/?action=stream?dummy=param.mjpg");
-long time_start = 0;
-long time_end = 0;
+long long time_start_init = 0;
+long long time_start = 0;
+long long time_end = 0;
 
 //Deep SORT parameter
 const int nn_budget = 400;
@@ -61,7 +62,7 @@ void drawPred(int classId, float conf, int left, int top, int right, int bottom,
 std::vector<cv::String> getOutputsNames(const cv::dnn::Net &net);
 void get_detections(DETECTBOX box, float confidence, DETECTIONS &d);
 
-static long gettimeU();
+static long long gettimeU();
 static std::string itos(int i); // convert int to string
 static void timeusePrint(const std::string &mod, const long time_start, const long time_end);
 static int cudaDeviceEnabled();
@@ -71,6 +72,9 @@ static int frameProcess(tracker& mytracker, CountingBees& counter, int& cnInBees
 cv::CommandLineParser& parser, std::string& outputFile, cv::VideoCapture& cap, cv::Mat& frame, cv::Mat& blob);
 
 std::string g_total_result_file;
+
+	int cnInBees_total = 0;
+    int  cnOutBees_total = 0;
 
 int main(int argc, char **argv)
 {
@@ -236,13 +240,13 @@ void get_detections(DETECTBOX box, float confidence, DETECTIONS &d)
 	d.push_back(tmpRow);
 }
 
-long gettimeU()
+long long gettimeU()
 {
   struct timeval tv;
-  struct timezone tz;
-  gettimeofday(&tv, &tz);
-  std::cout << "==" << tv.tv_usec << std::endl;
-  return tv.tv_usec;
+  //struct timezone tz;
+  gettimeofday(&tv,NULL);
+  //std::cout << "==" << tv.tv_sec << std::endl;
+  return tv.tv_sec * 1000000 + tv.tv_usec;
 }
 
 void timeusePrint(const std::string &mod, const long time_start, const long time_end)
@@ -359,6 +363,8 @@ int paraParser(cv::CommandLineParser& parser, std::string& str, std::string& out
 int frameProcess(tracker& mytracker, CountingBees& counter, int& cnInBees, int& cnOutBees,  cv::dnn::Net& net, 
 cv::CommandLineParser& parser, std::string& outputFile, cv::VideoCapture& cap, cv::Mat& frame, cv::Mat& blob)
 {
+	time_start_init = gettimeU();
+
 	while (cv::waitKey(1) < 0)
 	{
 		time_start = gettimeU();
@@ -377,9 +383,11 @@ cv::CommandLineParser& parser, std::string& outputFile, cv::VideoCapture& cap, c
 
 			ofstream file(g_total_result_file, ios::app);
 			std::string content;
-			content = std::to_string(fmt->tm_year+1900) + "/" + std::to_string(fmt->tm_mon+1) + "/" + std::to_string(fmt->tm_mday) 
-				+ "-" + std::to_string(fmt->tm_hour) + ":" + std::to_string(fmt->tm_min) + ":" + std::to_string(fmt->tm_sec) 
-				+ " " + "cnInBees = " + std::to_string(cnInBees) + ", cnOutBees = " + std::to_string(cnOutBees);
+			content = std::to_string(fmt->tm_year+1900) + "/" + std::to_string(fmt->tm_mon+1) 
+				+ "/" + std::to_string(fmt->tm_mday) 
+				+ "-" + std::to_string(fmt->tm_hour) 
+				+ ":" + std::to_string(fmt->tm_min) + ":" + std::to_string(fmt->tm_sec) 
+				+ " " + "cnInBees = " + std::to_string(cnInBees_total) + ", cnOutBees = " + std::to_string(cnOutBees_total);
 			file << content << std::endl;
 			std::cout << "Total result  is stored as " << g_total_result_file << std::endl;
 			cv::waitKey(3000);
@@ -413,7 +421,7 @@ cv::CommandLineParser& parser, std::string& outputFile, cv::VideoCapture& cap, c
 				result.push_back(std::make_pair(track.track_id, track.to_tlwh()));
 				// for test 
 				DETECTBOX bbox = track.to_tlwh();
-				counter.Update(nFrame, track.track_id, bbox[0], bbox[1], bbox[2], bbox[3]);
+				counter.Update(cnInBees_total, cnOutBees_total, nFrame, track.track_id, bbox[0], bbox[1], bbox[2], bbox[3]);
 			}
 			// cvScalar的储存顺序是B-G-R，CV_RGB的储存顺序是R-G-B
 
@@ -474,13 +482,17 @@ cv::CommandLineParser& parser, std::string& outputFile, cv::VideoCapture& cap, c
 		time_end = gettimeU();
 		timeusePrint("total", time_start, time_end);
 		
-		//if (0 == nFrame % 30)
+		int time_pass =(time_end-time_start_init)/1000;
+
+		if (time_pass > (60 *1000))// == nFrame % 30)
 		{
 		counter.Count(cnInBees,cnOutBees);
+cnInBees_total += cnInBees;
+cnOutBees_total += cnOutBees;
 		//nFrame = 0;
-		std::cout << "--------------cnInBees  =  " << cnInBees << " , "
-			  << "--------------cnOutBees = " << cnOutBees << " , " 
-			  << "--------------tempRegion = " << tempregion <<  std::endl;
+		time_start_init = gettimeU();
+		std::cout << "--------------cnInBees  =  " << cnInBees << " , " << "--------------cnOutBees = " << cnOutBees << " , "  << "--------------tempRegion = " << tempregion <<  std::endl;
+		std::cout << "--------------cnInBees_total = " << cnInBees_total << "--------------cnOutBees_total = -" << cnOutBees_total << std::endl;
 		}
 		std::cout << "nFrame = " << nFrame << std::endl;
 		nFrame++;

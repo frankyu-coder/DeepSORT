@@ -42,7 +42,9 @@ CountingBees::CountingBees(
 //   @desc
 //*****************************************************************************
 void CountingBees::Update(
-    int   nFrame, 
+int& beesInTotal, 
+int& beesOutTotal,
+    int&   nFrame, 
     int   nIDTrack, 
     float x, 
     float y, 
@@ -59,6 +61,9 @@ void CountingBees::Update(
     }
     else if (timeCurrent - m_nStartTime >= m_nResetDuration)
     {
+        nFrame = 0;
+	beesInTotal = 0;
+	beesOutTotal = 0;
         m_rgTrackNodes.clear();
         m_nStartTime = static_cast<int>(timeCurrent);
     }
