@@ -375,6 +375,10 @@ cv::CommandLineParser& parser, std::string& outputFile, cv::VideoCapture& cap, c
 		cap >> frame;
 		if (frame.empty())
 		{
+			counter.Count(cnInBees,cnOutBees);
+			cnInBees_bak  = cnInBees;
+			cnOutBees_bak = cnOutBees;
+
 			std::cout << "Done processing !!!" << std::endl;
 
 			time_t now;
@@ -489,10 +493,10 @@ cv::CommandLineParser& parser, std::string& outputFile, cv::VideoCapture& cap, c
 		if (time_pass > (60 *1000))// == nFrame % 30)
 		{
 		counter.Count(cnInBees,cnOutBees);
-		cnInBees_bak = cnInBees;
+		cnInBees_bak  = cnInBees;
 		cnOutBees_bak = cnOutBees;
-		cnInBees_total += cnInBees;
-		cnOutBees_total += cnOutBees;
+		//cnInBees_total += cnInBees;
+		//cnOutBees_total += cnOutBees;
 		//nFrame = 0;
 		time_start_init = gettimeU();
 		std::cout << "--------------cnInBees  =  " << cnInBees << " , " << "--------------cnOutBees = " << cnOutBees << " , "  << "--------------tempRegion = " << tempregion <<  std::endl;
