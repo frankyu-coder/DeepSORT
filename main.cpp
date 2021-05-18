@@ -251,10 +251,7 @@ long long gettimeU()
   return tv.tv_sec * 1000000 + tv.tv_usec;
 }
 
-void timeusePrint(const std::string &mod, const long time_start, const long time_end)
-{
-  std::cout << mod << " cost " << (time_end - time_start) / 1000 << " ms .." << std::endl;
-}
+void timeusePrint(const std::string &mod, const long time_start, const long time_end){std::cout << mod << " cost " << (time_end - time_start) / 1000 << " ms .." << std::endl;}
 
 std::string itos(int i) // convert int to string
 {
